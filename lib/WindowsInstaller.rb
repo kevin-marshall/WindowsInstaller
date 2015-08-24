@@ -2,8 +2,15 @@ require 'win32ole'
 require 'cmd'
 
 class WindowsInstaller < Hash
+  @@default_options = {}
+  
   def initialize(options = {})
+    @@default_options.each { |key, value| self[key] = value }
     options.each { |key, value| self[key] = value}
+  end
+  
+  def self.default_options(hash) 
+	hash.each { |key,value| @@default_options[key] = value }
   end
   
   def msi_installed?(msi_file)
@@ -27,8 +34,9 @@ class WindowsInstaller < Hash
    	cmd = "#{cmd} /passive" if(has_key?(:mode) && (self[:mode] == :passive))
 	cmd = "#{cmd} /i \"#{msi_file}\""
 
-	cmd_options = {quiet: true}
-	cmd_options[:admin_user] = self[:admin_user] if(has_key?(:admin_user))
+	cmd = "runas /savecred /user:#{self[:administrative_user]} \"#{cmd}\"" if(self.has_key?(:administrative_user))
+	
+	cmd_options = { echo_command: false, echo_output: false} unless(self[:debug])
     command = CMD.new(cmd, cmd_options)
 	command.execute
   end
@@ -43,12 +51,13 @@ class WindowsInstaller < Hash
     raise "#{product_code} is not installed" unless(product_code_installed?(product_code))
 
 	cmd = "msiexec.exe"
+	cmd = "#{cmd} /x #{product_code}"
    	cmd = "#{cmd} /quiet" if(has_key?(:mode) && (self[:mode] == :quiet))
    	cmd = "#{cmd} /passive" if(has_key?(:mode) && (self[:mode] == :passive))
-	cmd = "#{cmd} /x #{product_code}"
 
-	cmd_options = {quiet: true}
-	cmd_options[:admin_user] = self[:admin_user] if(has_key?(:admin_user))
+	cmd = "runas /savecred /user:#{self[:administrative_user]} \"#{cmd}\"" if(self.has_key?(:administrative_user))
+	
+	cmd_options = { echo_command: false, echo_output: false} unless(self[:debug])
 	command = CMD.new(cmd, cmd_options)
 	command.execute
   end
