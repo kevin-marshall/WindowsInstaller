@@ -85,7 +85,27 @@ class WindowsInstaller < Hash
   	cmd = "runas /noprofile /savecred /user:#{self[:administrative_user]} \"#{cmd}\"" if(self.has_key?(:administrative_user))
 	
     cmd_options = { echo_command: false, echo_output: false} unless(self[:debug])
-    command = CMD.new(cmd, cmd_options)
-    command.execute
+    
+	pre_execute = Sys::ProcTable.ps
+	
+	pre_pids = {}
+	pre_execute.each { |ps| pre_pids[ps.pid] = ps }
+	
+	command = CMD.new(cmd, cmd_options)
+	command.execute
+	
+	msiexe_pid = 0
+	post_execute = Sys::ProcTable.ps
+	post_execute.each do |ps| 
+	  msiexe_pid = ps.pid if((ps.name.downcase == "msiexec.exe") && !pre_pids.has_key?(ps.pid))
+	end
+
+	if(msiexe_pid != 0)
+	  loop do
+	    s = Sys::ProcTable.ps(msiexe_pid)
+		break if(s.nil?)
+		sleep(1)
+	  end
+	end
   end
 end

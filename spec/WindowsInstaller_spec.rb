@@ -1,8 +1,8 @@
 require 'rspec'
 require './lib/WindowsInstaller.rb'
 
-ADMINISTRATIVE_USER='username@domain'
-#ADMINISTRATIVE_USER='admin'
+#ADMINISTRATIVE_USER='username@domain'
+ADMINISTRATIVE_USER='kmarshall@musco'
 
 describe 'WindowsInstaller' do
   test_file='test_files/example.msi'
@@ -10,7 +10,7 @@ describe 'WindowsInstaller' do
   WindowsInstaller.default_options({administrative_user: ADMINISTRATIVE_USER}) unless(ADMINISTRATIVE_USER == 'username@domain')
   
   describe 'an interactive install' do
-    winstall = WindowsInstaller.new({debug: true})
+    winstall = WindowsInstaller.new()
 
     it 'example.msi should not be installed' do
 	  expect(winstall.msi_installed?(test_file)).to eq(false)
@@ -29,7 +29,7 @@ describe 'WindowsInstaller' do
 
   if(ADMINISTRATIVE_USER != 'username@domain')
     describe 'an automated install' do
-      winstall = WindowsInstaller.new({mode: :quiet, debug: true})
+      winstall = WindowsInstaller.new()
 
       it 'example.msi should not be installed' do
 	    expect(winstall.msi_installed?(test_file)).to eq(false)
