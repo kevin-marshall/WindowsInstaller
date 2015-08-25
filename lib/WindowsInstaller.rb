@@ -121,10 +121,14 @@ class WindowsInstaller < Hash
 	command = CMD.new(cmd, options)
 	command.execute
 
+	exe = cmd.match(/\\(?<path>.+\.exe)/i).named_captures['path']
+	exe = File.basename(exe)
+	puts "Exe: #{exe}"
+	
 	msiexe_pid = 0
  	post_execute = Sys::ProcTable.ps
 	post_execute.each do |ps| 
-	  msiexe_pid = ps.pid if((ps.name.downcase == "msiexec.exe") && pre_pids.index(ps.pid).nil?)
+	  msiexe_pid = ps.pid if((ps.name.downcase == exe.downcase) && pre_pids.index(ps.pid).nil?)
 	end
 
 	if(msiexe_pid != 0)
