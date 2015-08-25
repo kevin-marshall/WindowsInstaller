@@ -35,6 +35,7 @@ class WindowsInstaller < Hash
 	cmd = "#{cmd} /i #{msi_file}"
 
 	msiexec(cmd)
+	raise "Failed to install msi_file: #{msi_file}" unless(msi_installed?(msi_file))
   end
 
   def uninstall_msi(msi_file)
@@ -45,14 +46,32 @@ class WindowsInstaller < Hash
   
   def uninstall_product_code(product_code)
     raise "#{product_code} is not installed" unless(product_code_installed?(product_code))
-
+ 
 	cmd = "msiexec.exe"
 	cmd = "#{cmd} #{self[:mode]}" if(has_key?(:mode))
 	cmd = "#{cmd} /x #{product_code}"
 	msiexec(cmd)
+	if(product_code_installed?(product_code))
+	  properties = installed_properties(product_code)
+      raise "Failed to uninstall #{properties['InstalledProductName']} #{properties['VersionString']}" 
+	end
   end
   
   private
+  def installed_properties(product_code)
+    installer = WIN32OLE.new('WindowsInstaller.Installer')
+	
+	hash = Hash.new
+	# known product keywords found on internet.  Would be nice to generate.
+	%w[Language PackageCode Transforms AssignmentType PackageName InstalledProductName VersionString RegCompany 
+	   RegOwner ProductID ProductIcon InstallLocation InstallSource InstallDate Publisher LocalPackage HelpLink 
+	   HelpTelephone URLInfoAbout URLUpdateInfo InstanceType].sort.each do |prop|
+	   value = installer.ProductInfo(product_code, prop)
+	   hash[prop] = value unless(value.nil? || value == '')
+	end
+	return hash
+  end
+ 
   def msi_properties(msi_file)
     raise "#{msi_file} does not exist!" unless(File.exists?(msi_file))
 
@@ -82,22 +101,30 @@ class WindowsInstaller < Hash
   end
   
   def msiexec(cmd)
-  	cmd = "runas /noprofile /savecred /user:#{self[:administrative_user]} \"#{cmd}\"" if(self.has_key?(:administrative_user))
-	
     cmd_options = { echo_command: false, echo_output: false} unless(self[:debug])
-    
+	if(self.has_key?(:administrative_user))
+	  msiexec_admin(cmd, cmd_options)
+	else
+	  command = CMD.new(cmd, cmd_options)
+	  command.execute
+	end
+  end
+
+  def msiexec_admin(cmd, options)
+    cmd = "runas /noprofile /savecred /user:#{self[:administrative_user]} \"#{cmd}\""
+	
 	pre_execute = Sys::ProcTable.ps
 	
-	pre_pids = {}
-	pre_execute.each { |ps| pre_pids[ps.pid] = ps }
+	pre_pids = []
+	pre_execute.each { |ps| pre_pids << ps.pid }
 	
-	command = CMD.new(cmd, cmd_options)
+	command = CMD.new(cmd, options)
 	command.execute
-	
+
 	msiexe_pid = 0
-	post_execute = Sys::ProcTable.ps
+ 	post_execute = Sys::ProcTable.ps
 	post_execute.each do |ps| 
-	  msiexe_pid = ps.pid if((ps.name.downcase == "msiexec.exe") && !pre_pids.has_key?(ps.pid))
+	  msiexe_pid = ps.pid if((ps.name.downcase == "msiexec.exe") && pre_pids.index(ps.pid).nil?)
 	end
 
 	if(msiexe_pid != 0)
