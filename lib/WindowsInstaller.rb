@@ -1,8 +1,9 @@
 require 'win32ole'
 require 'cmd'
+require 'sys/proctable'
 
 class WindowsInstaller < Hash
-  @@default_options = {}
+  @@default_options = {mode: '/passive'}
   
   def initialize(options = {})
     @@default_options.each { |key, value| self[key] = value }
@@ -27,18 +28,13 @@ class WindowsInstaller < Hash
   def install_msi(msi_file)
     raise "#{msi_file} does not exist!" unless(File.exists?(msi_file))
 
-    msi_file = msi_file.gsub(/\//, '\\')
+    msi_file = File.absolute_path(msi_file).gsub(/\//, '\\')
 
 	cmd = "msiexec.exe"
-   	cmd = "#{cmd} /quiet" if(has_key?(:mode) && (self[:mode] == :quiet))
-   	cmd = "#{cmd} /passive" if(has_key?(:mode) && (self[:mode] == :passive))
-	cmd = "#{cmd} /i \"#{msi_file}\""
+	cmd = "#{cmd} #{self[:mode]}" if(has_key?(:mode))
+	cmd = "#{cmd} /i \\\"#{msi_file}\\\""
 
-	cmd = "runas /savecred /user:#{self[:administrative_user]} \"#{cmd}\"" if(self.has_key?(:administrative_user))
-	
-	cmd_options = { echo_command: false, echo_output: false} unless(self[:debug])
-    command = CMD.new(cmd, cmd_options)
-	command.execute
+	msiexec(cmd)
   end
 
   def uninstall_msi(msi_file)
@@ -51,15 +47,9 @@ class WindowsInstaller < Hash
     raise "#{product_code} is not installed" unless(product_code_installed?(product_code))
 
 	cmd = "msiexec.exe"
+	cmd = "#{cmd} #{self[:mode]}" if(has_key?(:mode))
 	cmd = "#{cmd} /x #{product_code}"
-   	cmd = "#{cmd} /quiet" if(has_key?(:mode) && (self[:mode] == :quiet))
-   	cmd = "#{cmd} /passive" if(has_key?(:mode) && (self[:mode] == :passive))
-
-	cmd = "runas /savecred /user:#{self[:administrative_user]} \"#{cmd}\"" if(self.has_key?(:administrative_user))
-	
-	cmd_options = { echo_command: false, echo_output: false} unless(self[:debug])
-	command = CMD.new(cmd, cmd_options)
-	command.execute
+	msiexec(cmd)
   end
   
   private
@@ -89,5 +79,13 @@ class WindowsInstaller < Hash
 	installer = nil
 	  
 	return properties
+  end
+  
+  def msiexec(cmd)
+  	cmd = "runas /noprofile /savecred /user:#{self[:administrative_user]} \"#{cmd}\"" if(self.has_key?(:administrative_user))
+	
+    cmd_options = { echo_command: false, echo_output: false} unless(self[:debug])
+    command = CMD.new(cmd, cmd_options)
+    command.execute
   end
 end
