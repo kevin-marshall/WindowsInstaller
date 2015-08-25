@@ -1,8 +1,7 @@
 require 'rspec'
 require './lib/WindowsInstaller.rb'
 
-#ADMINISTRATIVE_USER='username@domain'
-ADMINISTRATIVE_USER='kmarshall@musco'
+ADMINISTRATIVE_USER='username@domain'
 
 describe 'WindowsInstaller' do
   test_file='test_files/example.msi'
