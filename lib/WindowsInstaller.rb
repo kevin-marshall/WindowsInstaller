@@ -32,7 +32,7 @@ class WindowsInstaller < Hash
 
 	cmd = "msiexec.exe"
 	cmd = "#{cmd} #{self[:mode]}" if(has_key?(:mode))
-	cmd = "#{cmd} /i \\\"#{msi_file}\\\""
+	cmd = "#{cmd} /i #{msi_file}"
 
 	msiexec(cmd)
   end
