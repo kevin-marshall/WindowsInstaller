@@ -123,7 +123,7 @@ class WindowsInstaller < Hash
 
 	exe = cmd.match(/\\(?<path>.+\.exe)/i).named_captures['path']
 	exe = File.basename(exe)
-	puts "Exe: #{exe}"
+	#puts "Exe: #{exe}"
 	
 	msiexe_pid = 0
  	post_execute = Sys::ProcTable.ps
