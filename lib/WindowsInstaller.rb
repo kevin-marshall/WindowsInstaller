@@ -112,16 +112,19 @@ class WindowsInstaller < Hash
 
   def msiexec_admin(cmd, options)
     cmd = "runas /noprofile /savecred /user:#{self[:administrative_user]} \"#{cmd}\""
-	
+	command = CMD.new(cmd, options)
+	wait_on_spawned(cmd) { cmd.execute }
+  end
+  
+  def wait_on_spawned_process(cmd)
 	pre_execute = Sys::ProcTable.ps
 	
 	pre_pids = []
 	pre_execute.each { |ps| pre_pids << ps.pid }
-	
-	command = CMD.new(cmd, options)
-	command.execute
 
-	exe = cmd.match(/\\(?<path>.+\.exe)/i).named_captures['path']
+    yield	
+
+	exe = cmd[:command].match(/\\(?<path>.+\.exe)/i).named_captures['path']
 	exe = File.basename(exe)
 	#puts "Exe: #{exe}"
 	
@@ -137,6 +140,6 @@ class WindowsInstaller < Hash
 		break if(s.nil?)
 		sleep(1)
 	  end
-	end
-  end
+	end  
+  end 
 end
