@@ -1,6 +1,7 @@
 require 'win32ole'
-require 'cmd'
+require 'cmd_windows'
 require 'sys/proctable'
+require 'tempfile'
 
 class WindowsInstaller < Hash
   @@default_options = {mode: '/passive'}
@@ -14,7 +15,7 @@ class WindowsInstaller < Hash
 	hash.each { |key,value| @@default_options[key] = value }
   end
   
-  def msi_installed?(msi_file)
+  def msi_installed?(msi_file) 
     info = msi_properties(msi_file)
     return product_code_installed?(info['ProductCode'])
   end
@@ -96,50 +97,32 @@ class WindowsInstaller < Hash
 	  
 	installer.ole_free
 	installer = nil
-	  
+
 	return properties
   end
   
-  def msiexec(cmd)
-    cmd_options = { echo_command: false, echo_output: false} unless(self[:debug])
-	if(self.has_key?(:administrative_user))
-	  msiexec_admin(cmd, cmd_options)
-	else
-	  command = CMD.new(cmd, cmd_options)
-	  command.execute
-	end
-  end
-
-  def msiexec_admin(cmd, options)
-    cmd = "runas /noprofile /savecred /user:#{self[:administrative_user]} \"#{cmd}\""
-	command = CMD.new(cmd, options)
-	wait_on_spawned(cmd) { cmd.execute }
+  def msiexec(command)	
+    cmd = CMD.new(command)
+	cmd.execute
   end
   
-  def wait_on_spawned_process(cmd)
-	pre_execute = Sys::ProcTable.ps
+  private
+  def msiexec_block
+    original_value = '0'
+	raise ':administrative_user must be set to setup always_install_elevated priviledges' if(self[:always_installed_elevated] && self.has_key?[:administrative_user])
+	register_reg_file('1') if(self[:always_install_elevated])
+	yield
+	register_reg_file(current_value) if(self[:always_install_elevated])
+  end
+
+  def register_reg_file(value)
+	lib_directory = File.dirname(__FILE__)
+	reg_file = File.read("#{lib_directory}/always_install_elevated_template.reg")
+	reg_file=reg_file.gsub(/VALUE/,value)
+	file = Tempfile.new('wininst')
+	file.write(reg_file)
 	
-	pre_pids = []
-	pre_execute.each { |ps| pre_pids << ps.pid }
-
-    yield	
-
-	exe = cmd[:command].match(/\\(?<path>.+\.exe)/i).named_captures['path']
-	exe = File.basename(exe)
-	#puts "Exe: #{exe}"
-	
-	msiexe_pid = 0
- 	post_execute = Sys::ProcTable.ps
-	post_execute.each do |ps| 
-	  msiexe_pid = ps.pid if((ps.name.downcase == exe.downcase) && pre_pids.index(ps.pid).nil?)
-	end
-
-	if(msiexe_pid != 0)
-	  loop do
-	    s = Sys::ProcTable.ps(msiexe_pid)
-		break if(s.nil?)
-		sleep(1)
-	  end
-	end  
-  end 
+	cmd = CMD.new("#{ENV['SystemRoot']}\\System32\\regedit.exe /s #{file.path}", { echo_command: true })
+	cmd.execute_as(self[:administrative_user])
+  end
 end
