@@ -57,7 +57,6 @@ class WindowsInstaller < Hash
 	end
   end
   
-  private
   def installed_properties(product_code)
     installer = WIN32OLE.new('WindowsInstaller.Installer')
 	
@@ -100,6 +99,7 @@ class WindowsInstaller < Hash
 	return properties
   end
   
+  private
   def msiexec(cmd)
     cmd_options = { echo_command: false, echo_output: false} unless(self[:debug])
 	if(self.has_key?(:administrative_user))
