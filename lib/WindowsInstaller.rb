@@ -22,14 +22,10 @@ class WindowsInstaller < Hash
   end
 
   def product_installed?(product_name)
-    return false if(product_name.empty?)
-		
-    @installer.Products.each do |product_code|
-      name = @installer.ProductInfo(product_code, "ProductName")
-      return product_code_installed?(product_code) if (product_name == name)
-	end
-		
-    return false
+	product_code = installed_get_product_code(product_name)
+    return false if(product_code.empty?)
+	
+	return product_code_installed?(product_code)
   end
   
   def product_code_installed?(product_code)
@@ -69,19 +65,6 @@ class WindowsInstaller < Hash
 	end
   end
   
-  def installed_properties(product_code)	
-	hash = Hash.new
-	# known product keywords found on internet.  Would be nice to generate.
-	%w[Language PackageCode Transforms AssignmentType PackageName InstalledProductName VersionString RegCompany 
-	   RegOwner ProductID ProductIcon InstallLocation InstallSource InstallDate Publisher LocalPackage HelpLink 
-	   HelpTelephone URLInfoAbout URLUpdateInfo InstanceType].sort.each do |prop|
-	   value = @installer.ProductInfo(product_code, prop)
-	   hash[prop] = value unless(value.nil? || value == '')
-	end
-	return hash
-  end
- 
-  private
   def msi_properties(msi_file)
     raise "#{msi_file} does not exist!" unless(File.exists?(msi_file))
 
@@ -106,6 +89,40 @@ class WindowsInstaller < Hash
 	return properties
   end
   
+  def installation_properties(product_name)	
+	product_code = installed_get_product_code(product_name)
+	return nil if(product_code == '')
+	
+	return installed_properties(product_code)
+  end
+  
+  private
+  def installed_get_product_code(product_name)
+    return '' if(product_name.empty?)
+		
+    @installer.Products.each do |product_code|
+      name = @installer.ProductInfo(product_code, "ProductName")
+      return product_code if (product_name == name)
+	end
+		
+    return ''
+  end
+
+  def installed_properties(product_code)	
+	return nil if(!product_code_installed?(product_code))
+	
+	hash = Hash.new
+	# known product keywords found on internet.  Would be nice to generate.
+	%w[Language PackageCode Transforms AssignmentType PackageName InstalledProductName VersionString RegCompany 
+	   RegOwner ProductID ProductIcon InstallLocation InstallSource InstallDate Publisher LocalPackage HelpLink 
+	   HelpTelephone URLInfoAbout URLUpdateInfo InstanceType].sort.each do |prop|
+	   value = @installer.ProductInfo(product_code, prop)
+	   hash[prop] = value unless(value.nil? || value == '')
+	end
+	hash['ProductCode'] = product_code
+	return hash
+  end
+
   def msiexec(cmd)
     cmd_options = { echo_command: false, echo_output: false} unless(self[:debug])
 	if(self.has_key?(:administrative_user))
