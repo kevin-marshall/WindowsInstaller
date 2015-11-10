@@ -8,6 +8,8 @@ class WindowsInstaller < Hash
   def initialize(options = {})
     @@default_options.each { |key, value| self[key] = value }
     options.each { |key, value| self[key] = value}
+
+	@installer = WIN32OLE.new('WindowsInstaller.Installer')
   end
   
   def self.default_options(hash) 
@@ -18,10 +20,20 @@ class WindowsInstaller < Hash
     info = msi_properties(msi_file)
     return product_code_installed?(info['ProductCode'])
   end
+
+  def product_installed?(product_name)
+    return false if(product_name.empty?)
+		
+    @installer.Products.each do |product_code|
+      name = @installer.ProductInfo(product_code, "ProductName")
+      return product_code_installed?(product_code) if (product_name == name)
+	end
+		
+    return false
+  end
   
   def product_code_installed?(product_code)
-    installer = WIN32OLE.new('WindowsInstaller.Installer')
-	installer.Products.each { |installed_product_code| return true if (product_code == installed_product_code) }
+	@installer.Products.each { |installed_product_code| return true if (product_code == installed_product_code) }
 	return false
   end
   
@@ -57,29 +69,27 @@ class WindowsInstaller < Hash
 	end
   end
   
-  def installed_properties(product_code)
-    installer = WIN32OLE.new('WindowsInstaller.Installer')
-	
+  def installed_properties(product_code)	
 	hash = Hash.new
 	# known product keywords found on internet.  Would be nice to generate.
 	%w[Language PackageCode Transforms AssignmentType PackageName InstalledProductName VersionString RegCompany 
 	   RegOwner ProductID ProductIcon InstallLocation InstallSource InstallDate Publisher LocalPackage HelpLink 
 	   HelpTelephone URLInfoAbout URLUpdateInfo InstanceType].sort.each do |prop|
-	   value = installer.ProductInfo(product_code, prop)
+	   value = @installer.ProductInfo(product_code, prop)
 	   hash[prop] = value unless(value.nil? || value == '')
 	end
 	return hash
   end
  
+  private
   def msi_properties(msi_file)
     raise "#{msi_file} does not exist!" unless(File.exists?(msi_file))
 
     properties = {}
 	  
-    installer = WIN32OLE.new('WindowsInstaller.Installer')
     sql_query = "SELECT * FROM `Property`"
 
-	db = installer.OpenDatabase(msi_file, 0)
+	db = @installer.OpenDatabase(msi_file, 0)
 	view = db.OpenView(sql_query)
 	view.Execute(nil)
 			
@@ -92,14 +102,10 @@ class WindowsInstaller < Hash
 	end
 	db.ole_free
 	db = nil
-	  
-	installer.ole_free
-	installer = nil
-	  
+
 	return properties
   end
   
-  private
   def msiexec(cmd)
     cmd_options = { echo_command: false, echo_output: false} unless(self[:debug])
 	if(self.has_key?(:administrative_user))

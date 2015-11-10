@@ -9,6 +9,12 @@ class CMD_test < MiniTest::Unit::TestCase
 	@test_files = {}
 	@test_files[:example] = 'files/example.msi'
   end
+  
+  def teardown
+	#@test_files.each do |msi|
+	#	@installer.uninstall_msi(msi) if(@installer.msi_installed?(msi))
+	#end
+  end
 
   def test_user_install
     assert(!@installer.msi_installed?(@test_files[:example]))
@@ -16,5 +22,12 @@ class CMD_test < MiniTest::Unit::TestCase
     assert(@installer.msi_installed?(@test_files[:example]))
 	@installer.uninstall_msi(@test_files[:example])
     assert(!@installer.msi_installed?(@test_files[:example]))
+  end
+  def test_product_installed
+    assert(!@installer.product_installed?(:example.to_s))
+	@installer.install_msi(@test_files[:example])
+    assert(@installer.product_installed?(:example.to_s))
+	@installer.uninstall_msi(@test_files[:example])
+    assert(!@installer.product_installed?(:example.to_s))
   end
 end
