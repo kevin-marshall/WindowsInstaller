@@ -2,7 +2,7 @@ require 'minitest/autorun'
 require_relative('../lib/WindowsInstaller.rb')
 require 'win32ole'
 
-class CMD_test < MiniTest::Unit::TestCase
+class WindowsInstaller_test < MiniTest::Unit::TestCase
   def setup
     CMD.default_options({ echo_command: false, echo_output: false, debug: false})
 	@installer = WindowsInstaller.new
