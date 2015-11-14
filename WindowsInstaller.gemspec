@@ -21,7 +21,7 @@ Gem::Specification.new do |s|
 	s.authors		= ["Kevin Marshall"]
 	s.email			= 'KCCKSMarshall@gmail.com'
 	#s.rubyforge_project = 'WindowsInstaller'
-	s.homepage		= 'http://rubygems.org/gems/execute'
+	s.homepage		= 'http://rubygems.org/gems/WindowsExecute'
     s.required_ruby_version = '>= 1.9.1'
 	s.files         = Dir["LICENSE","README.md","lib/**/*","example/**/*"]
 	s.license       = 'Apache 2.0'
