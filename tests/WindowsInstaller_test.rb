@@ -51,4 +51,14 @@ class WindowsInstaller_test < MiniTest::Unit::TestCase
 	assert(properties.key?('InstallLocation'))
   end
   
+  def test_uninstall_by_property_name
+	@installer.install_msi(@test_files[:example])
+	assert(@installer.msi_installed?(@test_files[:example]))
+	properties = @installer.installation_properties(:example.to_s)
+	
+	@installer.uninstall_product(properties['InstalledProductName'])
+	assert(!@installer.product_installed?(@test_files[:example]))
+	assert(!@installer.msi_installed?(@test_files[:example]))
+  end
+
 end
