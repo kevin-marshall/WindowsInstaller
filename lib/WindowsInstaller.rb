@@ -52,6 +52,12 @@ class WindowsInstaller < Hash
     uninstall_product_code(info['ProductCode'])
   end
   
+  def uninstall_product(product_name)
+    raise Exception.new("Product '#{product_name}' is not installed") unless(product_installed?(product_installed))
+	
+	product_code = installed_get_product_code(product_name)
+	uninstall_product_code(product_code)		
+  end
   def uninstall_product_code(product_code)
     raise "#{product_code} is not installed" unless(product_code_installed?(product_code))
  
