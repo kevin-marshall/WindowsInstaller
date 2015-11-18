@@ -95,8 +95,11 @@ class WindowsInstaller < Hash
 	return properties
   end
   
-  def installation_properties(product_name)	
-	product_code = installed_get_product_code(product_name)
+  def installation_properties(product_name_or_product_code)	
+    properties = installed_properties(product_name_or_product_code)  
+    return properties unless(properties.nil?)
+	  
+	product_code = installed_get_product_code(product_name_or_product_code)
 	return nil if(product_code == '')
 	
 	return installed_properties(product_code)
