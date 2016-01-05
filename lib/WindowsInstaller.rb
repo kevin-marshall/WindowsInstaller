@@ -33,12 +33,6 @@ class WindowsInstaller < Hash
 	return false
   end
   
-  def installed_products
-    products = []
-	@installer.Products.each { |installed_product_code| products << installed_product_code }
-	return products
-  end
-  
   def install_msi(msi_file)
     raise "#{msi_file} does not exist!" unless(File.exists?(msi_file))
 
@@ -120,9 +114,15 @@ class WindowsInstaller < Hash
     return properties
   end
   
+  def installed_products
+    products = []
+	@installer.Products.each { |installed_product_code| products << installed_product_code }
+	return products
+  end
+  
   def product_codes(upgrade_code)
 	upgrade_codes = get_upgrade_codes
-	return (upgrade_codes.key?(upgrade_code)) ? upgrade_codes[upgrade_code] : nil
+	return (upgrade_codes.key?(upgrade_code)) ? upgrade_codes[upgrade_code] : []
   end
   
   private

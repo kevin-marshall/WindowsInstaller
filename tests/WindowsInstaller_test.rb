@@ -71,12 +71,11 @@ class WindowsInstaller_test < MiniTest::Unit::TestCase
   end
   def test_product_codes
     product_codes = @installer.product_codes('{9bc81854-26e2-4b1e-8068-48a293b1b507}')
-	assert(product_codes.nil?, 'Upgrade code does not exist, therefore there should be no assocated product codes')
+	assert(product_codes.size == 0, 'Upgrade code does not exist, therefore there should be no assocated product codes')
 
 	@installer.install_msi(@test_files[:example])
 	msi_properites = @installer.msi_properties(@test_files[:example])
 	product_codes = @installer.product_codes(msi_properites['UpgradeCode'])
-	assert(!product_codes.nil?, "Product #{msi_properites['ProductName']} is installed, so there should be a product code")
 	assert(product_codes.size == 1, 'There should be one product installed with the given UpgradeCode')
     assert(product_codes[0] == msi_properites['ProductCode'], 'Installed product code should equal msi product code')
 	@installer.uninstall_msi(@test_files[:example])
