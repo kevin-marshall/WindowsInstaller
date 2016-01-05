@@ -2,6 +2,13 @@ require 'dev'
 require 'cmd'
 require 'rbconfig'
 
+def admin?
+  `net session 2>&1`
+  return ($?.to_i==0) ? true :false
+end
+
+ENV['HOME'] = ENV['USERPROFILE'] if(admin?)
+
 task :test do
   Dir.chdir('tests') do
 	Dir['*_test.rb'].each do |test|

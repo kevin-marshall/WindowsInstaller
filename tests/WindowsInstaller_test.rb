@@ -44,10 +44,13 @@ class WindowsInstaller_test < MiniTest::Unit::TestCase
   def test_installation_properties
 	@installer.install_msi(@test_files[:example])
 	properties = @installer.installation_properties(:example.to_s)
+	assert(!properties.nil?)
+	
 	#properties.each { |prop_name, value| puts "#{prop_name}: #{value}" }
 	assert(properties['InstalledProductName'] == :example.to_s)
 	assert(properties['VersionString'] == '1.0.0.0')
 	assert(properties.key?('ProductCode'))
+	assert(properties.key?('UpgradeCode'))
 	assert(properties.key?('InstallLocation'))
   end
   

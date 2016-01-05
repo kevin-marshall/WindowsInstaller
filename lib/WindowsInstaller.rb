@@ -96,13 +96,22 @@ class WindowsInstaller < Hash
   end
   
   def installation_properties(product_name_or_product_code)	
-    properties = installed_properties(product_name_or_product_code)  
-    return properties unless(properties.nil?)
+    product_code = product_name_or_product_code
+    properties = installed_properties(product_code)
+    if(properties.nil?)
+	  product_name = product_name_or_product_code
+	  product_code = installed_get_product_code(product_name)
+	  return nil if(product_code == '')
 	  
-	product_code = installed_get_product_code(product_name_or_product_code)
-	return nil if(product_code == '')
+	  properties = installed_properties(product_code)
+	end
 	
-	return installed_properties(product_code)
+	return nil if(properties.nil?)
+	
+	upgrade_code = get_upgrade_code(product_code)
+	properties['UpgradeCode'] = upgrade_code unless(upgrade_code.nil?)
+	
+    return properties
   end
   
   private
@@ -132,6 +141,28 @@ class WindowsInstaller < Hash
 	return hash
   end
 
+  def get_upgrade_code(product_code)  
+	return nil if(!product_code_installed?(product_code))
+    
+	property_value = @installer.ProductsEx('','',7).each do |prod|
+	  begin
+	    local_pkg = prod.InstallProperty('LocalPackage')
+	  rescue
+	    next
+	  end
+	  db = @installer.OpenDataBase(local_pkg, 0)
+	  query = 'SELECT `Value` FROM `Property` WHERE `Property` = \'UpgradeCode\''
+	  view = db.OpenView(query)
+	  view.Execute
+	  record = view.Fetch
+	  unless(record.nil?)
+	    upgrade_code = record.StringData(1) 
+	    return upgrade_code if(prod.ProductCode == product_code)
+	  end
+	end
+	return nil
+  end
+  
   def msiexec(cmd)
     cmd_options = { echo_command: false, echo_output: false} unless(self[:debug])
 	if(self.has_key?(:administrative_user))
@@ -141,7 +172,7 @@ class WindowsInstaller < Hash
 	  command.execute
 	end
   end
-
+  
   def msiexec_admin(cmd, options)
     cmd = "runas /noprofile /savecred /user:#{self[:administrative_user]} \"#{cmd}\""
 	command = CMD.new(cmd, options)
