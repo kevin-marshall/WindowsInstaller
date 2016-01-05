@@ -33,6 +33,12 @@ class WindowsInstaller < Hash
 	return false
   end
   
+  def installed_products
+    products = []
+	@installer.Products.each { |installed_product_code| products << installed_product_code }
+	return products
+  end
+  
   def install_msi(msi_file)
     raise "#{msi_file} does not exist!" unless(File.exists?(msi_file))
 
@@ -114,6 +120,11 @@ class WindowsInstaller < Hash
     return properties
   end
   
+  def product_codes_from_upgrade_code(upgrade_code)
+	upgrade_codes = get_upgrade_codes
+	return (upgrade_codes.key?(upgrade_code)) ? upgrade_codes[upgrade_code] : nil
+  end
+  
   private
   def installed_get_product_code(product_name)
     return '' if(product_name.empty?)
@@ -141,9 +152,8 @@ class WindowsInstaller < Hash
 	return hash
   end
 
-  def get_upgrade_code(product_code)  
-	return nil if(!product_code_installed?(product_code))
-    
+  def get_upgrade_codes
+    upgrade_codes = {}  
 	property_value = @installer.ProductsEx('','',7).each do |prod|
 	  begin
 	    local_pkg = prod.InstallProperty('LocalPackage')
@@ -157,12 +167,23 @@ class WindowsInstaller < Hash
 	  record = view.Fetch
 	  unless(record.nil?)
 	    upgrade_code = record.StringData(1) 
-	    return upgrade_code if(prod.ProductCode == product_code)
+
+		upgrade_codes[upgrade_code] ||= []
+		upgrade_codes[upgrade_code] << prod.ProductCode
 	  end
+	end
+	return upgrade_codes
+  end
+  
+  def get_upgrade_code(product_code)  
+	return nil if(!product_code_installed?(product_code))
+	upgrade_codes = get_upgrade_codes
+	upgrade_codes.each do |upgrade_code, product_codes|
+	  product_codes.each { |pc| return upgrade_code if(pc == product_code) }
 	end
 	return nil
   end
-  
+    
   def msiexec(cmd)
     cmd_options = { echo_command: false, echo_output: false} unless(self[:debug])
 	if(self.has_key?(:administrative_user))
