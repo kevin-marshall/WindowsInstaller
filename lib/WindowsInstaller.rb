@@ -120,7 +120,7 @@ class WindowsInstaller < Hash
     return properties
   end
   
-  def product_codes_from_upgrade_code(upgrade_code)
+  def product_codes(upgrade_code)
 	upgrade_codes = get_upgrade_codes
 	return (upgrade_codes.key?(upgrade_code)) ? upgrade_codes[upgrade_code] : nil
   end
