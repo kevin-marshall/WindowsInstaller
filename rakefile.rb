@@ -1,5 +1,5 @@
 require 'dev'
-require 'cmd'
+require 'execute'
 require 'rbconfig'
 
 def admin?
@@ -12,7 +12,7 @@ ENV['HOME'] = ENV['USERPROFILE'] if(admin?)
 task :test do
   Dir.chdir('tests') do
 	Dir['*_test.rb'].each do |test|
-	  cmd = CMD.new("#{RbConfig::CONFIG['bindir']}/ruby.exe #{test}", {quite: true})
+	  cmd = Execute.new("#{RbConfig::CONFIG['bindir']}/ruby.exe #{test}", {quite: true})
 	  cmd.execute
 	end
   end

@@ -1,5 +1,5 @@
 require 'win32ole'
-require 'cmd'
+require 'execute'
 require 'sys/proctable'
 
 class WindowsInstaller < Hash
@@ -189,14 +189,14 @@ class WindowsInstaller < Hash
 	if(self.has_key?(:administrative_user))
 	  msiexec_admin(cmd, cmd_options)
 	else
-	  command = CMD.new(cmd, cmd_options)
+	  command = Execute.new(cmd, cmd_options)
 	  command.execute
 	end
   end
   
   def msiexec_admin(cmd, options)
     cmd = "runas /noprofile /savecred /user:#{self[:administrative_user]} \"#{cmd}\""
-	command = CMD.new(cmd, options)
+	command = Execute.new(cmd, options)
 	wait_on_spawned(cmd) { cmd.execute }
   end
   

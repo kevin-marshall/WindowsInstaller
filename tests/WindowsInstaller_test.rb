@@ -4,7 +4,7 @@ require 'win32ole'
 
 class WindowsInstaller_test < MiniTest::Unit::TestCase
   def setup
-    CMD.default_options({ echo_command: false, echo_output: false, debug: false})
+    Execute.default_options({ echo_command: false, echo_output: false, debug: false})
 	@installer = WindowsInstaller.new
 	@test_files = {}
 	@test_files[:example] = 'files/example.msi'
