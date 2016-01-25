@@ -5,7 +5,8 @@ GEM
       rake (~> 10.1)
       rspec (~> 3.0)
     diff-lcs (1.2.5)
-    execute (0.1.0)
+    execute (0.1.63)
+      sys-proctable (>= 0.9.8)
     rake (10.4.2)
     rspec (3.3.0)
       rspec-core (~> 3.3.0)
@@ -20,6 +21,7 @@ GEM
       diff-lcs (>= 1.2.0, < 2.0)
       rspec-support (~> 3.3.0)
     rspec-support (3.3.0)
+    sys-proctable (1.0.0-universal-mingw32)
 
 PLATFORMS
   x64-mingw32
@@ -27,7 +29,7 @@ PLATFORMS
 DEPENDENCIES
   bundler
   dev
-  execute
+  execute (~> 0.1.63)
   rake
   rspec
 
