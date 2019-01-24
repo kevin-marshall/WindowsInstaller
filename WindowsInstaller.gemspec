@@ -15,18 +15,18 @@
 #
 Gem::Specification.new do |s|
 	s.name			= 'WindowsInstaller'
-	s.version		= '0.1.23'
+	s.version		= '0.1.25'
 	s.summary		= 'Class wrapper for Microsoft Windows WindowsInstaller object'
 	s.description	= 'Class wrapper for Microsoft Windows WindowsInstaller object'
 	s.authors		= ["Kevin Marshall"]
-	s.email			= 'KCCKSMarshall@gmail.com'
+	#s.email			= 'KCCKSMarshall@gmail.com'
 	#s.rubyforge_project = 'WindowsInstaller'
 	s.homepage		= 'http://rubygems.org/gems/WindowsExecute'
-    s.required_ruby_version = '>= 1.9.1'
+    s.required_ruby_version = '>= 2.3.3'
 	s.files         = Dir["LICENSE","README.md","lib/**/*","example/**/*"]
 	s.license       = 'Apache 2.0'
 	s.require_path  = 'lib'
-	s.add_dependency 'execute', '~> 0.1.73'
+	s.add_dependency 'execute', '~> 0.1.76'
     s.add_development_dependency 'bundler', '~> 0'
 	s.add_development_dependency 'rake', '~> 0'
 	s.add_development_dependency 'rspec', '~> 0'
