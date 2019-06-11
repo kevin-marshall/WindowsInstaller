@@ -15,7 +15,7 @@
 #
 Gem::Specification.new do |s|
 	s.name			= 'WindowsInstaller'
-	s.version		= '0.1.25'
+	s.version		= '0.1.26'
 	s.summary		= 'Class wrapper for Microsoft Windows WindowsInstaller object'
 	s.description	= 'Class wrapper for Microsoft Windows WindowsInstaller object'
 	s.authors		= ["Kevin Marshall"]

@@ -154,28 +154,29 @@ class WindowsInstaller < Hash
 
   def get_upgrade_codes
     upgrade_codes = {}  
-	  property_value = @installer.ProductsEx('','',7).each do |prod|
-	    begin
-	      local_pkg = prod.InstallProperty('LocalPackage')
-	    rescue
-	      next
-	    end
+	property_value = @installer.ProductsEx('','',7).each do |prod|
+	  begin
+	    local_pkg = prod.InstallProperty('LocalPackage')
 		
-		  db = @installer.OpenDataBase(local_pkg, 0)
+	    db = @installer.OpenDataBase(local_pkg, 0)
 	    query = 'SELECT `Value` FROM `Property` WHERE `Property` = \'UpgradeCode\''
 	    view = db.OpenView(query)
 	    view.Execute
 		
-		  record = view.Fetch
+		record = view.Fetch
 	    unless(record.nil?)
 	      upgrade_code = record.StringData(1) 
 
-		    upgrade_codes[upgrade_code] ||= []
-		    upgrade_codes[upgrade_code] << prod.ProductCode
-	    end
-	  end
+		  upgrade_codes[upgrade_code] ||= []
+		  upgrade_codes[upgrade_code] << prod.ProductCode
+		end
 		
-		return upgrade_codes
+	  rescue
+	    next
+	  end
+	end
+		
+	return upgrade_codes
   end
   
   def get_upgrade_code(product_code)  
