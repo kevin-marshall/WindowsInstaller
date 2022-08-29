@@ -34,7 +34,7 @@ class WindowsInstaller < Hash
   end
   
   def install_msi(msi_file)
-    raise "#{msi_file} does not exist!" unless(File.exists?(msi_file))
+    raise "#{msi_file} does not exist!" unless(File.exist?(msi_file))
 
     msi_file = File.absolute_path(msi_file).gsub(/\//, '\\')
 
@@ -47,7 +47,7 @@ class WindowsInstaller < Hash
   end
 
   def uninstall_msi(msi_file)
-    raise "#{msi_file} does not exist!" unless(File.exists?(msi_file))
+    raise "#{msi_file} does not exist!" unless(File.exist?(msi_file))
     info = msi_properties(msi_file)
     uninstall_product_code(info['ProductCode'])
   end
@@ -72,7 +72,7 @@ class WindowsInstaller < Hash
   end
   
   def msi_properties(msi_file)
-    raise "#{msi_file} does not exist!" unless(File.exists?(msi_file))
+    raise "#{msi_file} does not exist!" unless(File.exist?(msi_file))
 
     properties = {}
 	  
